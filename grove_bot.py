@@ -34,9 +34,21 @@ from discord import app_commands
 from discord.ext import commands
 
 # ----------------------------- НАСТРОЙКИ -----------------------------
-# Токен НЕ хранится в коде. Он задаётся в переменных окружения хостинга
-# (переменная GROVE_TOKEN). Так безопаснее и токен не утечёт в git.
-TOKEN = os.getenv("GROVE_TOKEN")
+# Пытаемся загрузить .env, если файл есть (полезно локально и на части хостингов).
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # если python-dotenv не установлен — просто читаем системные переменные
+
+# Токен НЕ хранится в коде. Берём его из переменных окружения хостинга.
+# Принимаем несколько распространённых имён, чтобы не спотыкаться на названии.
+TOKEN = (
+    os.getenv("GROVE_TOKEN")
+    or os.getenv("DISCORD_TOKEN")
+    or os.getenv("BOT_TOKEN")
+    or os.getenv("TOKEN")
+)
 
 # Фирменный зелёный цвет Grove Street для эмбедов
 GROVE_GREEN = 0x2E8B3D
@@ -235,7 +247,9 @@ async def help_cmd(interaction: discord.Interaction):
 if __name__ == "__main__":
     if not TOKEN:
         raise RuntimeError(
-            "❌ Не задан токен! Добавь переменную окружения GROVE_TOKEN "
-            "в настройках хостинга (Variables / Environment / Secrets)."
+            "❌ Не задан токен! Добавь переменную окружения на хостинге "
+            "(Variables / Environment / Secrets) с одним из имён: "
+            "GROVE_TOKEN, DISCORD_TOKEN, BOT_TOKEN или TOKEN. "
+            "После добавления НЕ забудь сделать Redeploy/Restart."
         )
     bot.run(TOKEN)
